@@ -104,6 +104,7 @@ CLAUDE.local.md
 .pnpm-store/*
 local/
 Procfile.worktree
+.nodeterm/project.json
 
 # HAL: throwaway spike test harness — never commit
 takeover-test/
