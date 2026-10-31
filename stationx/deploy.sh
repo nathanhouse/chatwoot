@@ -175,7 +175,7 @@ if [[ $pending != 0 && $MIGRATE != 1 ]]; then fail "$pending pending migration(s
 # Snapshot: a pg_dump before every deploy (the DB is ~150 MB, ~5 s). Confirmed by reading it back, never by name.
 dump="$STATE/pre-${SHA:0:12}-$(date -u +%Y%m%dT%H%M%SZ).dump"
 dc exec -T postgres pg_dump -U postgres -Fc "$CW_DB" >"$dump"; chmod 600 "$dump"
-tables=$(dc exec -T postgres pg_restore --list <"$dump" | grep -c ' TABLE ' || true)
+tables=$(dc exec -T postgres pg_restore --list <"$dump" | grep -c ' TABLE public ' || true)
 [[ $tables -ge 50 ]] || fail "pre-deploy dump $dump lists $tables tables (expected >= 50): not deploying"
 echo "snapshot: $dump ($(du -h "$dump" | cut -f1), $tables tables)"
 
