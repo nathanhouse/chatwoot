@@ -32,10 +32,6 @@ const chatSortFilter = useMapGetter('getChatSortFilter');
 
 const [showActionsDropdown, toggleDropdown] = useToggle();
 
-const currentStatusFilter = computed(() => {
-  return chatStatusFilter.value || wootConstants.STATUS_TYPE.OPEN;
-});
-
 const currentSortBy = computed(() => {
   return (
     chatSortFilter.value || wootConstants.SORT_BY_TYPE.LAST_ACTIVITY_AT_DESC
@@ -125,11 +121,12 @@ const saveSelectedFilter = (type, value) => {
     conversations_filter_by: {
       // StationX: keep the SAVED status when only the sort changes. The list can show a status
       // the agent never chose (it follows the conversation opened by URL, ChatList.vue).
+      // Nothing saved yet → the same default ChatList's setFiltersFromUISettings() loads.
       status:
         type === 'status'
           ? value
           : uiSettings.value.conversations_filter_by?.status ||
-            currentStatusFilter.value,
+            wootConstants.STATUS_TYPE.OPEN,
       order_by: type === 'sort' ? value : currentSortBy.value,
     },
   });
