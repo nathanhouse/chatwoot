@@ -1,0 +1,388 @@
+# trivy baseline: HIGH/CRITICAL advisories already in UPSTREAM Chatwoot v4.18.0 (dev deps included).
+# Only NEW findings fail CI. Each entry is scoped to its exact package version (purl) and expires;
+# refresh this file on every upstream upgrade (it must shrink or be re-justified, never grow silently).
+# Generated 2026-10-30 by HAL with trivy fs --scanners vuln --severity HIGH,CRITICAL --include-dev-deps.
+vulnerabilities:
+  - id: CVE-2025-64756
+    purls:
+      - "pkg:npm/glob@10.4.5"
+    expired_at: 2027-01-31
+    statement: upstream v4.18.0 baseline (HIGH; pnpm-lock.yaml)
+  - id: CVE-2026-101898
+    purls:
+      - "pkg:npm/axios@1.15.0"
+    expired_at: 2027-01-31
+    statement: upstream v4.18.0 baseline (HIGH; pnpm-lock.yaml)
+  - id: CVE-2026-101901
+    purls:
+      - "pkg:npm/axios@1.15.0"
+    expired_at: 2027-01-31
+    statement: upstream v4.18.0 baseline (HIGH; pnpm-lock.yaml)
+  - id: CVE-2026-101906
+    purls:
+      - "pkg:npm/axios@1.15.0"
+    expired_at: 2027-01-31
+    statement: upstream v4.18.0 baseline (HIGH; pnpm-lock.yaml)
+  - id: CVE-2026-102276
+    purls:
+      - "pkg:npm/brace-expansion@1.1.11"
+      - "pkg:npm/brace-expansion@1.1.14"
+      - "pkg:npm/brace-expansion@2.0.2"
+      - "pkg:npm/brace-expansion@5.0.5"
+    expired_at: 2027-01-31
+    statement: upstream v4.18.0 baseline (HIGH; pnpm-lock.yaml, tests/playwright/pnpm-lock.yaml)
+  - id: CVE-2026-102278
+    purls:
+      - "pkg:npm/brace-expansion@1.1.11"
+      - "pkg:npm/brace-expansion@1.1.14"
+      - "pkg:npm/brace-expansion@2.0.2"
+      - "pkg:npm/brace-expansion@5.0.5"
+    expired_at: 2027-01-31
+    statement: upstream v4.18.0 baseline (HIGH; pnpm-lock.yaml, tests/playwright/pnpm-lock.yaml)
+  - id: CVE-2026-104847
+    purls:
+      - "pkg:npm/prosemirror-view@1.34.1"
+    expired_at: 2027-01-31
+    statement: upstream v4.18.0 baseline (HIGH; pnpm-lock.yaml)
+  - id: CVE-2026-104848
+    purls:
+      - "pkg:npm/tinypool@1.0.2"
+    expired_at: 2027-01-31
+    statement: upstream v4.18.0 baseline (CRITICAL; pnpm-lock.yaml)
+  - id: CVE-2026-104849
+    purls:
+      - "pkg:npm/tinypool@1.0.2"
+    expired_at: 2027-01-31
+    statement: upstream v4.18.0 baseline (CRITICAL; pnpm-lock.yaml)
+  - id: CVE-2026-111758
+    purls:
+      - "pkg:npm/markdown-it@14.1.1"
+      - "pkg:npm/markdown-it@14.3.0"
+    expired_at: 2027-01-31
+    statement: upstream v4.18.0 baseline (HIGH; pnpm-lock.yaml)
+  - id: CVE-2026-111759
+    purls:
+      - "pkg:npm/markdown-it@12.3.2"
+      - "pkg:npm/markdown-it@14.1.1"
+      - "pkg:npm/markdown-it@14.3.0"
+    expired_at: 2027-01-31
+    statement: upstream v4.18.0 baseline (HIGH; pnpm-lock.yaml)
+  - id: CVE-2026-112942
+    purls:
+      - "pkg:npm/launch-editor@2.9.1"
+      - "pkg:npm/vite@6.4.2"
+    expired_at: 2027-01-31
+    statement: upstream v4.18.0 baseline (HIGH; pnpm-lock.yaml)
+  - id: CVE-2026-118257
+    purls:
+      - "pkg:npm/%40intlify/core-base@9.14.5"
+      - "pkg:npm/%40intlify/shared@9.14.5"
+      - "pkg:npm/vue-i18n@9.14.5"
+    expired_at: 2027-01-31
+    statement: upstream v4.18.0 baseline (HIGH; pnpm-lock.yaml)
+  - id: CVE-2026-12143
+    purls:
+      - "pkg:npm/form-data@4.0.5"
+    expired_at: 2027-01-31
+    statement: upstream v4.18.0 baseline (HIGH; pnpm-lock.yaml)
+  - id: CVE-2026-13149
+    purls:
+      - "pkg:npm/brace-expansion@1.1.11"
+      - "pkg:npm/brace-expansion@1.1.14"
+      - "pkg:npm/brace-expansion@2.0.2"
+      - "pkg:npm/brace-expansion@5.0.5"
+    expired_at: 2027-01-31
+    statement: upstream v4.18.0 baseline (HIGH; pnpm-lock.yaml, tests/playwright/pnpm-lock.yaml)
+  - id: CVE-2026-13311
+    purls:
+      - "pkg:npm/shell-quote@1.8.1"
+    expired_at: 2027-01-31
+    statement: upstream v4.18.0 baseline (HIGH; pnpm-lock.yaml)
+  - id: CVE-2026-13676
+    purls:
+      - "pkg:npm/fast-uri@3.0.2"
+      - "pkg:npm/fast-uri@3.1.0"
+    expired_at: 2027-01-31
+    statement: upstream v4.18.0 baseline (HIGH; pnpm-lock.yaml, tests/playwright/pnpm-lock.yaml)
+  - id: CVE-2026-14257
+    purls:
+      - "pkg:npm/brace-expansion@1.1.11"
+      - "pkg:npm/brace-expansion@1.1.14"
+      - "pkg:npm/brace-expansion@2.0.2"
+      - "pkg:npm/brace-expansion@5.0.5"
+    expired_at: 2027-01-31
+    statement: upstream v4.18.0 baseline (HIGH; pnpm-lock.yaml, tests/playwright/pnpm-lock.yaml)
+  - id: CVE-2026-16221
+    purls:
+      - "pkg:npm/fast-uri@3.0.2"
+      - "pkg:npm/fast-uri@3.1.0"
+    expired_at: 2027-01-31
+    statement: upstream v4.18.0 baseline (HIGH; pnpm-lock.yaml, tests/playwright/pnpm-lock.yaml)
+  - id: CVE-2026-18446
+    purls:
+      - "pkg:npm/fast-uri@3.0.2"
+      - "pkg:npm/fast-uri@3.1.0"
+    expired_at: 2027-01-31
+    statement: upstream v4.18.0 baseline (HIGH; pnpm-lock.yaml, tests/playwright/pnpm-lock.yaml)
+  - id: CVE-2026-32141
+    purls:
+      - "pkg:npm/flatted@3.2.9"
+    expired_at: 2027-01-31
+    statement: upstream v4.18.0 baseline (HIGH; pnpm-lock.yaml)
+  - id: CVE-2026-33228
+    purls:
+      - "pkg:npm/flatted@3.2.9"
+    expired_at: 2027-01-31
+    statement: upstream v4.18.0 baseline (HIGH; pnpm-lock.yaml)
+  - id: CVE-2026-33671
+    purls:
+      - "pkg:npm/picomatch@2.3.1"
+    expired_at: 2027-01-31
+    statement: upstream v4.18.0 baseline (HIGH; pnpm-lock.yaml)
+  - id: CVE-2026-35209
+    purls:
+      - "pkg:npm/defu@6.1.4"
+    expired_at: 2027-01-31
+    statement: upstream v4.18.0 baseline (HIGH; pnpm-lock.yaml)
+  - id: CVE-2026-42033
+    purls:
+      - "pkg:npm/axios@1.15.0"
+    expired_at: 2027-01-31
+    statement: upstream v4.18.0 baseline (HIGH; pnpm-lock.yaml)
+  - id: CVE-2026-42035
+    purls:
+      - "pkg:npm/axios@1.15.0"
+    expired_at: 2027-01-31
+    statement: upstream v4.18.0 baseline (HIGH; pnpm-lock.yaml)
+  - id: CVE-2026-42043
+    purls:
+      - "pkg:npm/axios@1.15.0"
+    expired_at: 2027-01-31
+    statement: upstream v4.18.0 baseline (HIGH; pnpm-lock.yaml)
+  - id: CVE-2026-42264
+    purls:
+      - "pkg:npm/axios@1.15.0"
+    expired_at: 2027-01-31
+    statement: upstream v4.18.0 baseline (HIGH; pnpm-lock.yaml)
+  - id: CVE-2026-44486
+    purls:
+      - "pkg:npm/axios@1.15.0"
+    expired_at: 2027-01-31
+    statement: upstream v4.18.0 baseline (HIGH; pnpm-lock.yaml)
+  - id: CVE-2026-44487
+    purls:
+      - "pkg:npm/axios@1.15.0"
+    expired_at: 2027-01-31
+    statement: upstream v4.18.0 baseline (HIGH; pnpm-lock.yaml)
+  - id: CVE-2026-44488
+    purls:
+      - "pkg:npm/axios@1.15.0"
+    expired_at: 2027-01-31
+    statement: upstream v4.18.0 baseline (HIGH; pnpm-lock.yaml)
+  - id: CVE-2026-44492
+    purls:
+      - "pkg:npm/axios@1.15.0"
+    expired_at: 2027-01-31
+    statement: upstream v4.18.0 baseline (HIGH; pnpm-lock.yaml)
+  - id: CVE-2026-44494
+    purls:
+      - "pkg:npm/axios@1.15.0"
+    expired_at: 2027-01-31
+    statement: upstream v4.18.0 baseline (HIGH; pnpm-lock.yaml)
+  - id: CVE-2026-44495
+    purls:
+      - "pkg:npm/axios@1.15.0"
+    expired_at: 2027-01-31
+    statement: upstream v4.18.0 baseline (HIGH; pnpm-lock.yaml)
+  - id: CVE-2026-44496
+    purls:
+      - "pkg:npm/axios@1.15.0"
+    expired_at: 2027-01-31
+    statement: upstream v4.18.0 baseline (HIGH; pnpm-lock.yaml)
+  - id: CVE-2026-46625
+    purls:
+      - "pkg:npm/js-cookie@3.0.5"
+    expired_at: 2027-01-31
+    statement: upstream v4.18.0 baseline (HIGH; pnpm-lock.yaml)
+  - id: CVE-2026-47429
+    purls:
+      - "pkg:npm/vitest@3.0.5"
+    expired_at: 2027-01-31
+    statement: upstream v4.18.0 baseline (CRITICAL; pnpm-lock.yaml)
+  - id: CVE-2026-4800
+    purls:
+      - "pkg:npm/lodash@4.17.21"
+    expired_at: 2027-01-31
+    statement: upstream v4.18.0 baseline (HIGH; pnpm-lock.yaml)
+  - id: CVE-2026-48779
+    purls:
+      - "pkg:npm/ws@8.18.0"
+      - "pkg:npm/ws@8.18.3"
+    expired_at: 2027-01-31
+    statement: upstream v4.18.0 baseline (HIGH; pnpm-lock.yaml)
+  - id: CVE-2026-48801
+    purls:
+      - "pkg:npm/linkify-it@3.0.3"
+      - "pkg:npm/linkify-it@5.0.0"
+    expired_at: 2027-01-31
+    statement: upstream v4.18.0 baseline (HIGH; pnpm-lock.yaml)
+  - id: CVE-2026-59869
+    purls:
+      - "pkg:npm/js-yaml@3.14.1"
+      - "pkg:npm/js-yaml@4.1.1"
+    expired_at: 2027-01-31
+    statement: upstream v4.18.0 baseline (HIGH; pnpm-lock.yaml, tests/playwright/pnpm-lock.yaml)
+  - id: CVE-2026-59887
+    purls:
+      - "pkg:npm/linkify-it@3.0.3"
+      - "pkg:npm/linkify-it@5.0.0"
+    expired_at: 2027-01-31
+    statement: upstream v4.18.0 baseline (HIGH; pnpm-lock.yaml)
+  - id: CVE-2026-6321
+    purls:
+      - "pkg:npm/fast-uri@3.0.2"
+      - "pkg:npm/fast-uri@3.1.0"
+    expired_at: 2027-01-31
+    statement: upstream v4.18.0 baseline (HIGH; pnpm-lock.yaml, tests/playwright/pnpm-lock.yaml)
+  - id: CVE-2026-6322
+    purls:
+      - "pkg:npm/fast-uri@3.0.2"
+      - "pkg:npm/fast-uri@3.1.0"
+    expired_at: 2027-01-31
+    statement: upstream v4.18.0 baseline (HIGH; pnpm-lock.yaml, tests/playwright/pnpm-lock.yaml)
+  - id: CVE-2026-66066
+    purls:
+      - "pkg:gem/activestorage@7.2.3.1"
+    expired_at: 2027-01-31
+    statement: upstream v4.18.0 baseline (HIGH; Gemfile.lock)
+  - id: CVE-2026-67987
+    purls:
+      - "pkg:gem/ruby_llm@1.15.0"
+    expired_at: 2027-01-31
+    statement: upstream v4.18.0 baseline (HIGH; Gemfile.lock)
+  - id: CVE-2026-67989
+    purls:
+      - "pkg:gem/ruby_llm@1.15.0"
+    expired_at: 2027-01-31
+    statement: upstream v4.18.0 baseline (HIGH; Gemfile.lock)
+  - id: CVE-2026-67991
+    purls:
+      - "pkg:gem/ruby_llm@1.15.0"
+    expired_at: 2027-01-31
+    statement: upstream v4.18.0 baseline (HIGH; Gemfile.lock)
+  - id: CVE-2026-69152
+    purls:
+      - "pkg:npm/brace-expansion@1.1.11"
+      - "pkg:npm/brace-expansion@1.1.14"
+      - "pkg:npm/brace-expansion@2.0.2"
+      - "pkg:npm/brace-expansion@5.0.5"
+    expired_at: 2027-01-31
+    statement: upstream v4.18.0 baseline (HIGH; pnpm-lock.yaml, tests/playwright/pnpm-lock.yaml)
+  - id: CVE-2026-73088
+    purls:
+      - "pkg:npm/browserslist@4.23.0"
+      - "pkg:npm/browserslist@4.23.3"
+    expired_at: 2027-01-31
+    statement: upstream v4.18.0 baseline (HIGH; pnpm-lock.yaml)
+  - id: CVE-2026-73089
+    purls:
+      - "pkg:npm/browserslist@4.23.0"
+      - "pkg:npm/browserslist@4.23.3"
+    expired_at: 2027-01-31
+    statement: upstream v4.18.0 baseline (HIGH; pnpm-lock.yaml)
+  - id: CVE-2026-75975
+    purls:
+      - "pkg:npm/fast-uri@3.0.2"
+      - "pkg:npm/fast-uri@3.1.0"
+    expired_at: 2027-01-31
+    statement: upstream v4.18.0 baseline (HIGH; pnpm-lock.yaml, tests/playwright/pnpm-lock.yaml)
+  - id: CVE-2026-76172
+    purls:
+      - "pkg:npm/fast-uri@3.0.2"
+      - "pkg:npm/fast-uri@3.1.0"
+    expired_at: 2027-01-31
+    statement: upstream v4.18.0 baseline (HIGH; pnpm-lock.yaml, tests/playwright/pnpm-lock.yaml)
+  - id: CVE-2026-83605
+    purls:
+      - "pkg:npm/%40xmldom/xmldom@0.8.13"
+    expired_at: 2027-01-31
+    statement: upstream v4.18.0 baseline (HIGH; pnpm-lock.yaml)
+  - id: CVE-2026-83607
+    purls:
+      - "pkg:npm/%40xmldom/xmldom@0.8.13"
+    expired_at: 2027-01-31
+    statement: upstream v4.18.0 baseline (HIGH; pnpm-lock.yaml)
+  - id: CVE-2026-83608
+    purls:
+      - "pkg:npm/%40xmldom/xmldom@0.8.13"
+    expired_at: 2027-01-31
+    statement: upstream v4.18.0 baseline (HIGH; pnpm-lock.yaml)
+  - id: CVE-2026-83613
+    purls:
+      - "pkg:npm/%40xmldom/xmldom@0.8.13"
+    expired_at: 2027-01-31
+    statement: upstream v4.18.0 baseline (HIGH; pnpm-lock.yaml)
+  - id: CVE-2026-83614
+    purls:
+      - "pkg:npm/%40xmldom/xmldom@0.8.13"
+    expired_at: 2027-01-31
+    statement: upstream v4.18.0 baseline (HIGH; pnpm-lock.yaml)
+  - id: CVE-2026-83615
+    purls:
+      - "pkg:npm/%40xmldom/xmldom@0.8.13"
+    expired_at: 2027-01-31
+    statement: upstream v4.18.0 baseline (HIGH; pnpm-lock.yaml)
+  - id: CVE-2026-83616
+    purls:
+      - "pkg:npm/%40xmldom/xmldom@0.8.13"
+    expired_at: 2027-01-31
+    statement: upstream v4.18.0 baseline (HIGH; pnpm-lock.yaml)
+  - id: CVE-2026-83619
+    purls:
+      - "pkg:npm/%40xmldom/xmldom@0.8.13"
+    expired_at: 2027-01-31
+    statement: upstream v4.18.0 baseline (HIGH; pnpm-lock.yaml)
+  - id: CVE-2026-84292
+    purls:
+      - "pkg:npm/fast-uri@3.0.2"
+      - "pkg:npm/fast-uri@3.1.0"
+    expired_at: 2027-01-31
+    statement: upstream v4.18.0 baseline (HIGH; pnpm-lock.yaml, tests/playwright/pnpm-lock.yaml)
+  - id: CVE-2026-84375
+    purls:
+      - "pkg:npm/js-yaml@3.14.1"
+      - "pkg:npm/js-yaml@4.1.1"
+    expired_at: 2027-01-31
+    statement: upstream v4.18.0 baseline (HIGH; pnpm-lock.yaml, tests/playwright/pnpm-lock.yaml)
+  - id: CVE-2026-9277
+    purls:
+      - "pkg:npm/shell-quote@1.8.1"
+    expired_at: 2027-01-31
+    statement: upstream v4.18.0 baseline (CRITICAL; pnpm-lock.yaml)
+  - id: CVE-2026-93749
+    purls:
+      - "pkg:npm/source-map-js@1.2.1"
+    expired_at: 2027-01-31
+    statement: upstream v4.18.0 baseline (HIGH; pnpm-lock.yaml)
+  - id: GHSA-5p4m-2wfm-xmqj
+    purls:
+      - "pkg:npm/js-yaml@3.14.1"
+      - "pkg:npm/js-yaml@4.1.1"
+    expired_at: 2027-01-31
+    statement: upstream v4.18.0 baseline (HIGH; pnpm-lock.yaml, tests/playwright/pnpm-lock.yaml)
+  - id: GHSA-cg2g-xh64-v4q7
+    purls:
+      - "pkg:npm/dompurify@3.4.13"
+    expired_at: 2027-01-31
+    statement: upstream v4.18.0 baseline (CRITICAL; pnpm-lock.yaml)
+  - id: GHSA-g2v6-rqmx-r4w6
+    purls:
+      - "pkg:npm/%40vue/server-renderer@3.5.12"
+      - "pkg:npm/%40vue/server-renderer@3.5.13"
+    expired_at: 2027-01-31
+    statement: upstream v4.18.0 baseline (HIGH; pnpm-lock.yaml)
+  - id: GHSA-mrv2-3pqr-j5jr
+    purls:
+      - "pkg:npm/dompurify@3.4.13"
+    expired_at: 2027-01-31
+    statement: upstream v4.18.0 baseline (HIGH; pnpm-lock.yaml)

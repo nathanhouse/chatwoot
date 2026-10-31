@@ -1,0 +1,108 @@
+# StationX CI for OUR fork of Chatwoot. Upstream's own workflows are disabled on this repo (2026-10-30, Nathan's go);
+# this file is the only CI that runs here. It gates OUR changes, not upstream's code:
+#   Secret Detection — gitleaks over every commit NOT in an upstream release tag (our commits only).
+#   Semgrep          — baseline mode: only findings NEW against the PR base fail (pinned rules).
+#   Dependency Scan  — trivy on the lockfiles, HIGH/CRITICAL, dev deps included; upstream's existing
+#                      advisories are baselined in .trivyignore.yaml (purl-scoped, expiring). Also daily.
+# Rules: context/architecture/delivery-protocol.md (HAL). Procedure: commands/chatwoot/delivery.md (HAL).
+name: StationX CI
+
+on:
+  pull_request:
+    branches: [stationx-main]
+  workflow_dispatch:
+  schedule:
+    - cron: "17 5 * * *" # daily dependency scan (runs on the default branch)
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  gitleaks:
+    name: Secret Detection
+    if: github.event_name != 'schedule'
+    runs-on: ${{ vars.CI_RUNNER == 'ubicloud' && 'ubicloud-standard-2' || 'ubuntu-24.04' }}
+    timeout-minutes: 15
+    permissions:
+      contents: read
+      pull-requests: read
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 0 # full history + tags, so upstream's tagged commits can be excluded
+      - name: Install gitleaks (pinned, checksum-verified)
+        env:
+          GITLEAKS_VERSION: "8.30.0"
+        run: |
+          set -euo pipefail
+          ASSET="gitleaks_${GITLEAKS_VERSION}_linux_x64.tar.gz"
+          curl -sSL -o "$ASSET" "https://github.com/gitleaks/gitleaks/releases/download/v${GITLEAKS_VERSION}/${ASSET}"
+          curl -sSL -o checksums.txt "https://github.com/gitleaks/gitleaks/releases/download/v${GITLEAKS_VERSION}/gitleaks_${GITLEAKS_VERSION}_checksums.txt"
+          grep " ${ASSET}\$" checksums.txt | sha256sum -c -
+          tar -xzf "$ASSET" gitleaks
+      # Our commits = everything reachable from HEAD that no upstream release tag (v*) contains.
+      # Upstream's history carries ~98 fixture/doc hits (measured 2026-10-30) that are not ours to fix.
+      # Refuse to run if no upstream tag is present: the exclusion would silently become "scan nothing new".
+      - name: Secret scan (our commits only)
+        run: |
+          set -euo pipefail
+          test -n "$(git tag --list 'v*' | head -1)" || { echo "no upstream v* tags fetched"; exit 1; }
+          n=$(git rev-list --count HEAD --not --tags='v*')
+          echo "commits scanned: $n"
+          # A PR always adds at least one commit of ours. 0 = they were excluded, e.g. by a v* tag of our own (we never
+          # make one: our releases are sha-<12> image tags). Refuse rather than pass having scanned nothing.
+          if [ "$n" = 0 ] && [ "${{ github.event_name }}" = pull_request ]; then echo "0 commits to scan on a PR"; exit 1; fi
+          ./gitleaks git . --no-banner --redact --log-opts="HEAD --not --tags=v*"
+
+  semgrep:
+    name: Semgrep SAST
+    # PRs only: baseline mode needs a base that differs from HEAD; on a manual run from stationx-main the base IS
+    # HEAD, so it would pass having compared nothing (review 2026-10-31).
+    if: github.event_name == 'pull_request'
+    runs-on: ${{ vars.CI_RUNNER == 'ubicloud' && 'ubicloud-standard-2' || 'ubuntu-24.04' }}
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 0 # baseline mode diffs against the PR base commit
+      - name: Install Semgrep (pinned)
+        run: pip install --quiet semgrep==1.151.0
+      # Rules PINNED to a semgrep-rules commit (registry packs like `--config auto` are mutable).
+      - name: Fetch the pinned rule set
+        run: |
+          git clone --quiet https://github.com/semgrep/semgrep-rules /tmp/semgrep-rules
+          git -C /tmp/semgrep-rules checkout --quiet a84ff9cc2453ca91d581380de4b8b3f272f6f4be
+      # BASELINE MODE: only findings NEWER than the PR base fail, so upstream's existing code never blocks us.
+      - name: Semgrep (new findings only)
+        env:
+          BASE: ${{ github.event.pull_request.base.sha || 'origin/stationx-main' }}
+        run: |
+          semgrep scan --config /tmp/semgrep-rules/ruby --config /tmp/semgrep-rules/javascript \
+            --config /tmp/semgrep-rules/typescript --error --baseline-commit "$BASE" \
+            --timeout 15 --metrics=off .
+
+  trivy:
+    name: Dependency Scan
+    runs-on: ${{ vars.CI_RUNNER == 'ubicloud' && 'ubicloud-standard-2' || 'ubuntu-24.04' }}
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      # trivy SKIPS dev dependencies by default; include them (estate rule 2026-09-25).
+      # HIGH/CRITICAL fail. Upstream v4.18.0's 69 advisories are baselined in .trivyignore.yaml (expire 2027-01-31).
+      - uses: aquasecurity/trivy-action@ed142fd0673e97e23eac54620cfb913e5ce36c25 # v0.36.0
+        # The baseline is passed as TRIVY_IGNOREFILE, not the action's `trivyignores` input: that input
+        # concatenates files into a plain-text ignore list, which would break the YAML (purl + expiry) format.
+        env:
+          TRIVY_INCLUDE_DEV_DEPS: "true"
+          TRIVY_IGNOREFILE: .trivyignore.yaml
+        with:
+          version: v0.74.0
+          scan-type: fs
+          scanners: vuln
+          severity: HIGH,CRITICAL
+          exit-code: "1"
+          cache: ${{ runner.environment != 'self-hosted' }}
