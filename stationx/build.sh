@@ -32,7 +32,9 @@ if [[ $PUSH == 1 ]]; then
   source "${CREDS:?}"
   echo "${GITHUB_TOKEN:?}" | docker login ghcr.io -u "${GITHUB_USER:?}" --password-stdin >/dev/null
   # Immutable: a per-commit tag is never rebuilt over.
-  if docker buildx imagetools inspect "$tag" >/dev/null 2>&1; then die "$tag already exists; deploy its digest instead"; fi
+  # Only a clear "not found" means the tag is free; any other error (network, auth) stops the build (review 2026-10-31).
+  if probe=$(docker buildx imagetools inspect "$tag" 2>&1); then die "$tag already exists; deploy its digest instead"; fi
+  [[ $probe == *"not found"* ]] || die "cannot tell whether $tag exists: ${probe:0:200}"
   output=(--push)
 else
   output=(--load)

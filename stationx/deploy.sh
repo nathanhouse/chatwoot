@@ -71,13 +71,13 @@ smoke() {
     sleep 3
   done
   ok "/api healthy: $body"
-  code=$(curl -s -o /dev/null -w '%{http_code}' "http://127.0.0.1:$CW_PORT/api/v1/stationx-smoke-no-such-route")
+  code=$(curl -s --max-time 10 -o /dev/null -w '%{http_code}' "http://127.0.0.1:$CW_PORT/api/v1/stationx-smoke-no-such-route")
   [[ $code == 404 ]] || fail "unknown route gave $code, expected 404 (control)"
   ok "unknown route 404 (control)"
   body=$(curl -s --max-time 10 "http://127.0.0.1:$CW_PORT/app/login")
   asset=$(grep -o 'src="/vite/assets/[^"]*\.js"' <<<"$body" | head -1 | cut -d'"' -f2 || true)
   [[ -n $asset ]] || fail "login page has no /vite/assets script"
-  code=$(curl -s -o /dev/null -w '%{http_code}' "http://127.0.0.1:$CW_PORT$asset")
+  code=$(curl -s --max-time 10 -o /dev/null -w '%{http_code}' "http://127.0.0.1:$CW_PORT$asset")
   [[ $code == 200 ]] || fail "$asset gave $code"
   ok "login page + its script $asset"
   for svc in rails sidekiq; do
@@ -93,12 +93,21 @@ smoke() {
     # (a stale upstream IP shows up there as soon as any open Chatwoot tab reconnects).
     rails_id=$(dc ps -q rails)
     ip=$(docker exec "$CW_NGINX" getent hosts "$(docker inspect -f '{{.Name}}' "$rails_id" | tr -d /)" | awk '{print $1}')
-    [[ " $(docker inspect -f '{{range .NetworkSettings.Networks}}{{.IPAddress}} {{end}}' "$rails_id") " == *" $ip "* ]] || fail "nginx resolves rails to '$ip', not the new container"
+    [[ -n $ip && " $(docker inspect -f '{{range .NetworkSettings.Networks}}{{.IPAddress}} {{end}}' "$rails_id") " == *" $ip "* ]] || fail "nginx resolves rails to '$ip', not the new container"
     ok "nginx resolves rails to its current IP $ip"
-    errs=$(docker logs --since "${SMOKE_SINCE:-10m}" "$CW_NGINX" 2>&1 | grep 'connect() failed' | grep -c ":3000/" || true)
+    logs=$(docker logs --since "${SMOKE_SINCE:-10m}" "$CW_NGINX" 2>&1) || fail "cannot read the nginx log"
+    errs=$(grep 'connect() failed' <<<"$logs" | grep -c ":3000/" || true)
     [[ $errs == 0 ]] || fail "nginx logged $errs failed connection(s) to rails since ${SMOKE_SINCE:-10m ago}: stale upstream? reload nginx"
     ok "no failed nginx connections to rails since ${SMOKE_SINCE:-10m ago}"
   fi
+}
+# A recreated rails gets a new IP; nginx keeps the old one until reloaded: 502s (2026-07-12). A failed config test
+# must stop the deploy, not skip the reload (review 2026-10-31). The smoke counts nginx errors only from here on.
+reload_nginx() {
+  [[ -n $CW_NGINX ]] || return 0
+  docker exec "$CW_NGINX" nginx -t -q || fail "nginx config test failed: NOT reloaded, rails may be unreachable (delivery.md § 14)"
+  docker exec "$CW_NGINX" nginx -s reload || fail "nginx reload failed (delivery.md § 14)"
+  SMOKE_SINCE=$(date -u +%FT%TZ)
 }
 LIB
 
@@ -135,19 +144,24 @@ deploy)
     from=$(box 'cd "$CW_DIR"; [[ -f .stationx-deploy/history.tsv ]] && awk -F"\t" '"'"'$2=="ok"||$2=="rollback"{c=$3} END{print c}'"'"' .stationx-deploy/history.tsv || true')
     [[ -n $from ]] || die "no deploy history on the box yet: pass --from <the commit that is live>"
   fi
+  # Stored in history and re-read by the next deploy: a full id, never a name like HEAD~3 (review 2026-10-31).
+  from=$(git rev-parse --verify "${from}^{commit}") || die "unknown --from commit $from"
   # Count the range: what ships must be exactly what was named.
   count=$(git rev-list --count "$from..$sha")
   echo "range ${from:0:10}..${sha:0:10}: $count commit(s)"
   git log --oneline "$from..$sha" | sed 's/^/  /'
   [[ $count == "$expect" ]] || die "range has $count commit(s), the go named $expect: stop"
 
-  box "$REMOTE_LIB"$'\n'"$(printf 'SHA=%q FROM=%q IMAGE=%q MIGRATE=%q GO=%q\n' "$sha" "$from" "$image" "$migrate" "$go")"$'\n'"$(cat <<'REMOTE'
+  if ! out=$(box "$REMOTE_LIB"$'\n'"$(printf 'SHA=%q FROM=%q IMAGE=%q MIGRATE=%q GO=%q\n' "$sha" "$from" "$image" "$migrate" "$go")"$'\n'"$(cat <<'REMOTE'
 mkdir -p "$STATE"; chmod 700 "$STATE"
 # The pull needs room (the image is ~1.5 GB) and so does the dump.
 free_kb=$(df -Pk . | awk 'NR==2{print $4}')
 (( free_kb > 5 * 1024 * 1024 )) || fail "only $((free_kb / 1024)) MB free under $CW_DIR: need 5 GB before deploying"
 mkdir "$STATE/lock" 2>/dev/null || fail "another deploy holds $CW_DIR/$STATE/lock"
 trap 'rmdir "$STATE/lock"' EXIT
+# A history ending in 'deploy' = the last deploy never passed its smoke. Deploying over it would record the broken
+# image as the rollback target (review 2026-10-31): roll back (or settle it by hand) first.
+if [[ -s $HIST && $(tail -1 "$HIST" | cut -f2) == deploy ]]; then fail "the last deploy never finished: run 'rollback' or settle it by hand first"; fi
 prev_id=$(running_image rails)
 prev_ref=$(docker image inspect -f '{{range .RepoDigests}}{{println .}}{{end}}' "$prev_id" | grep "^$REPO@" | head -1 || true)
 prev_ref=${prev_ref:-$prev_id}
@@ -183,34 +197,36 @@ echo "snapshot: $dump ($(du -h "$dump" | cut -f1), $tables tables)"
 # prev-commit prev-image prev-image-id schema-before dump go-words. 'deploy' = started, 'ok' = smoke passed.
 line() { printf '%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\n' "$(date -u +%FT%TZ)" "$1" "$SHA" "$IMAGE" "$new_id" "$FROM" "$prev_ref" "$prev_id" "$before" "$dump" "$GO" >>"$HIST"; }
 line deploy
+echo "HISTORY: deploy recorded (from here a failure needs 'rollback')"
 if [[ $MIGRATE == 1 ]]; then
   echo "migrations (db:chatwoot_prepare):"
   dc run --rm rails bundle exec rails db:chatwoot_prepare
 fi
 # Recreating rails + sidekiq also clears the column cache a migration leaves stale (2026-09-18).
-SMOKE_SINCE=$(date -u +%FT%TZ)
 dc up -d --no-deps --pull never rails sidekiq
-if [[ -n $CW_NGINX ]]; then
-  # A recreated rails gets a new IP; nginx keeps the old one until reloaded: 502s (2026-07-12).
-  docker exec "$CW_NGINX" nginx -t -q && docker exec "$CW_NGINX" nginx -s reload
-fi
+reload_nginx
 smoke "$new_id"
 after=$(schema_max)
 line ok
 echo "DEPLOYED ${SHA:0:12} (schema $before -> $after). Rollback target: $prev_ref"
 REMOTE
-)" || die "deploy did not finish: the box may be part-way. Run 'stationx/deploy.sh status', then 'rollback' (commands/chatwoot/delivery.md)"
-
-  if [[ -n $CW_PUBLIC ]]; then
-    code=$(curl -s -o /dev/null -w '%{http_code} %{redirect_url}' "$CW_PUBLIC/api")
-    [[ $code == "302 https://"*".cloudflareaccess.com/"* ]] || die "public URL gave '$code', expected the Cloudflare Access login"
-    echo "  ok  public URL answers through Cloudflare Access"
+)" | tee /dev/stderr); then
+    # Only a deploy that wrote its history line can have changed anything; before that, rollback would undo the
+    # PREVIOUS good deploy (review 2026-10-31).
+    [[ $out == *"HISTORY: deploy recorded"* ]] || die "this deploy was refused before changing anything, so rollback would NOT be undoing it: follow the FAIL line above"
+    die "deploy did not finish: the box may be part-way. Run 'stationx/deploy.sh status', then 'rollback' (commands/chatwoot/delivery.md § 11)"
   fi
+
   # Registry writes only for the real server: a rehearsal must never move the production tag.
   if [[ -n $CW_SSH && $image == "$REPO@sha256:"* ]]; then
     # Keep the registry tag on what is live, so a plain 'compose pull' cannot bring back an older image.
     docker buildx imagetools create --tag "$REPO:stationx-main" "$image" >/dev/null
     echo "  ok  $REPO:stationx-main now points at the deployed digest"
+  fi
+  if [[ -n $CW_PUBLIC ]]; then
+    code=$(curl -s --max-time 15 -o /dev/null -w '%{http_code} %{redirect_url}' "$CW_PUBLIC/api")
+    [[ $code == "302 https://"*".cloudflareaccess.com/"* ]] || die "public URL gave '$code', expected the Cloudflare Access login"
+    echo "  ok  public URL answers through Cloudflare Access"
   fi
   ;;
 
@@ -240,11 +256,8 @@ if [[ $now != "$before" && $ACCEPT != 1 ]]; then
 fi
 docker image inspect "$prev_id" >/dev/null 2>&1 || docker pull --quiet --platform linux/amd64 "$prev_ref" >/dev/null
 docker tag "$prev_id" "$REPO:stationx-main"
-SMOKE_SINCE=$(date -u +%FT%TZ)
 dc up -d --no-deps --pull never rails sidekiq
-if [[ -n $CW_NGINX ]]; then
-  docker exec "$CW_NGINX" nginx -t -q && docker exec "$CW_NGINX" nginx -s reload
-fi
+reload_nginx
 smoke "$prev_id"
 printf '%s\trollback\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\n' "$(date -u +%FT%TZ)" "$prev_sha" "$prev_ref" "$prev_id" "$sha" "$ref" "$new_id" "$now" "-" >>"$HIST"
 echo "ROLLED BACK to $prev_ref (was ${sha:0:12})"

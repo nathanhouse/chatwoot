@@ -51,12 +51,18 @@ jobs:
         run: |
           set -euo pipefail
           test -n "$(git tag --list 'v*' | head -1)" || { echo "no upstream v* tags fetched"; exit 1; }
-          echo "commits scanned: $(git rev-list --count HEAD --not --tags='v*')"
+          n=$(git rev-list --count HEAD --not --tags='v*')
+          echo "commits scanned: $n"
+          # A PR always adds at least one commit of ours. 0 = they were excluded, e.g. by a v* tag of our own (we never
+          # make one: our releases are sha-<12> image tags). Refuse rather than pass having scanned nothing.
+          if [ "$n" = 0 ] && [ "${{ github.event_name }}" = pull_request ]; then echo "0 commits to scan on a PR"; exit 1; fi
           ./gitleaks git . --no-banner --redact --log-opts="HEAD --not --tags=v*"
 
   semgrep:
     name: Semgrep SAST
-    if: github.event_name != 'schedule'
+    # PRs only: baseline mode needs a base that differs from HEAD; on a manual run from stationx-main the base IS
+    # HEAD, so it would pass having compared nothing (review 2026-10-31).
+    if: github.event_name == 'pull_request'
     runs-on: ${{ vars.CI_RUNNER == 'ubicloud' && 'ubicloud-standard-2' || 'ubuntu-24.04' }}
     timeout-minutes: 20
     steps:
