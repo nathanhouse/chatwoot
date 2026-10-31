@@ -25,7 +25,7 @@ const emit = defineEmits(['changeFilter']);
 const store = useStore();
 const { t } = useI18n();
 
-const { updateUISettings } = useUISettings();
+const { uiSettings, updateUISettings } = useUISettings();
 
 const chatStatusFilter = useMapGetter('getChatStatusFilter');
 const chatSortFilter = useMapGetter('getChatSortFilter');
@@ -123,7 +123,13 @@ const activeChatSortLabel = computed(
 const saveSelectedFilter = (type, value) => {
   updateUISettings({
     conversations_filter_by: {
-      status: type === 'status' ? value : currentStatusFilter.value,
+      // StationX: keep the SAVED status when only the sort changes. The list can show a status
+      // the agent never chose (it follows the conversation opened by URL, ChatList.vue).
+      status:
+        type === 'status'
+          ? value
+          : uiSettings.value.conversations_filter_by?.status ||
+            currentStatusFilter.value,
       order_by: type === 'sort' ? value : currentSortBy.value,
     },
   });

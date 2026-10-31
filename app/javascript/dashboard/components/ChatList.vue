@@ -1,7 +1,7 @@
 <script setup>
 import { ref, unref, provide, computed, watch, onMounted } from 'vue';
 import { useStore } from 'vuex';
-import { useRouter } from 'vue-router';
+import { useRouter, useRoute } from 'vue-router';
 import {
   useMapGetter,
   useFunctionGetter,
@@ -21,6 +21,7 @@ import ConversationResolveAttributesModal from 'dashboard/components-next/Conver
 import { useUISettings } from 'dashboard/composables/useUISettings';
 import { useAlert } from 'dashboard/composables';
 import { useBulkActions } from 'dashboard/composables/chatlist/useBulkActions';
+import { useLocateOpenConversation } from 'dashboard/composables/chatlist/useLocateOpenConversation';
 import { useFilter } from 'shared/composables/useFilter';
 import { useTrack } from 'dashboard/composables';
 import { useI18n } from 'vue-i18n';
@@ -63,10 +64,12 @@ const emit = defineEmits(['conversationLoad']);
 const { uiSettings } = useUISettings();
 const { t } = useI18n();
 const router = useRouter();
+const route = useRoute();
 const store = useStore();
 const { buildConversationListPath } = useConversationRoutePath();
 
 const resolveAttributesModalRef = ref(null);
+const conversationListRef = ref(null);
 
 const activeAssigneeTab = ref(wootConstants.ASSIGNEE_TYPE.ME);
 const activeStatus = ref(wootConstants.STATUS_TYPE.OPEN);
@@ -107,6 +110,7 @@ const currentAccountId = useMapGetter('getCurrentAccountId');
 // We can't useFunctionGetter here since it needs to be called on setup?
 const getTeamFn = useMapGetter('teams/getTeam');
 const getConversationById = useMapGetter('getConversationById');
+const selectedChat = useMapGetter('getSelectedChat');
 
 const {
   selectedConversations,
@@ -809,6 +813,40 @@ onMounted(() => {
   if (hasActiveFolders.value) {
     store.dispatch('campaigns/get');
   }
+  // StationX: show the conversation opened by URL in the list. Must start after
+  // setFiltersFromUISettings(), because its immediate check compares against activeStatus.
+  useLocateOpenConversation({
+    routeConversationId: computed(() => route.params.conversation_id),
+    selectedChat,
+    conversationList,
+    isScopedView: computed(() =>
+      Boolean(
+        props.label ||
+          props.teamId ||
+          props.foldersId ||
+          props.conversationType ||
+          hasAppliedFiltersOrActiveFolders.value
+      )
+    ),
+    activeTab: activeAssigneeTab,
+    activeStatus,
+    currentUserId: computed(() => currentUser.value?.id),
+    availableTabs: computed(() => assigneeTabItems.value.map(item => item.key)),
+    moveList: ({ assigneeTab, status }) => {
+      if (status === activeStatus.value) {
+        updateAssigneeTab(assigneeTab);
+        return;
+      }
+      // Tab and status in ONE reset + fetch: two fetches race, and the early one can land the
+      // conversation alone in the list and scroll to the wrong place (review 2026-10-31).
+      emitter.emit('clearSearchInput');
+      activeAssigneeTab.value = assigneeTab;
+      // The status dropdown reads the store; the agent's saved preference is left untouched.
+      store.dispatch('setChatStatusFilter', status);
+      onBasicFilterChange(status, 'status');
+    },
+    scrollToIndex: index => conversationListRef.value?.scrollToIndex(index),
+  });
 });
 
 const deleteConversationDialogRef = ref(null);
@@ -945,6 +983,7 @@ watch(appliedFilters, () => resetBulkActions());
       @select-all-conversations="toggleSelectAll"
     />
     <ConversationList
+      ref="conversationListRef"
       :conversation-list="conversationList"
       :is-loading="chatListLoading"
       :show-end-of-list-message="showEndOfListMessage"
