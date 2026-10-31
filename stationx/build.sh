@@ -1,7 +1,9 @@
 #!/usr/bin/env bash
 # Build OUR Chatwoot image from ONE commit on stationx-main and push it under an immutable per-commit tag.
 #   stationx/build.sh <commit-sha>
-# Builds from a clean detached worktree of that commit, so nothing uncommitted can end up in the image.
+# Builds from a fresh one-commit clone of that commit, so nothing uncommitted can end up in the image. (Not a
+# git worktree: the Dockerfile runs "git rev-parse HEAD", and a worktree's .git points outside the build
+# context, so the build failed at that step: rehearsal 2026-10-31.)
 # Tags ghcr.io/nathanhouse/chatwoot:sha-<12 chars> (refuses if the tag already exists) and prints the digest.
 # The deploy (stationx/deploy.sh) deploys by that digest. Procedure: commands/chatwoot/delivery.md (HAL).
 #
@@ -37,8 +39,11 @@ else
 fi
 
 work=$(mktemp -d "${TMPDIR:-/tmp}/cw-build.XXXXXX")
-trap 'git -C "$root" worktree remove --force "$work/src" >/dev/null 2>&1 || true; rm -rf "$work"' EXIT
-git -C "$root" worktree add --detach --quiet "$work/src" "$sha"
+trap 'rm -rf "$work"' EXIT
+git init --quiet "$work/src"
+git -C "$work/src" fetch --quiet --depth 1 "file://$root" "$sha"
+git -C "$work/src" checkout --quiet --detach FETCH_HEAD
+[[ $(git -C "$work/src" rev-parse HEAD) == "$sha" ]] || die "clone is not at $sha"
 
 docker buildx build --platform "$PLATFORM" -f "$work/src/docker/Dockerfile" \
   --label org.opencontainers.image.revision="$sha" \
