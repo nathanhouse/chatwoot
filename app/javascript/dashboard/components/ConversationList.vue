@@ -54,7 +54,11 @@ const loadMoreConversations = () => {
 
 provide('toggleContextMenu', onContextMenuToggle);
 
-defineExpose({ conversationListRef });
+// StationX: lets ChatList bring the open conversation's card into view.
+const scrollToIndex = index =>
+  virtualListRef.value?.scrollToIndex(index, { align: 'nearest' });
+
+defineExpose({ conversationListRef, scrollToIndex });
 </script>
 
 <template>
