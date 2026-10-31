@@ -813,8 +813,8 @@ onMounted(() => {
   if (hasActiveFolders.value) {
     store.dispatch('campaigns/get');
   }
-  // StationX: show the conversation opened by URL in the list (Alan, 2026-10-30). Started after the
-  // saved status filter is applied above, so that filter is what it compares against.
+  // StationX: show the conversation opened by URL in the list. Must start after
+  // setFiltersFromUISettings(), because its immediate check compares against activeStatus.
   useLocateOpenConversation({
     routeConversationId: computed(() => route.params.conversation_id),
     selectedChat,
@@ -832,9 +832,16 @@ onMounted(() => {
     activeStatus,
     currentUserId: computed(() => currentUser.value?.id),
     availableTabs: computed(() => assigneeTabItems.value.map(item => item.key)),
-    switchTab: updateAssigneeTab,
-    // The status dropdown reads the store; the agent's saved preference is left untouched.
-    switchStatus: status => {
+    moveList: ({ assigneeTab, status }) => {
+      if (status === activeStatus.value) {
+        updateAssigneeTab(assigneeTab);
+        return;
+      }
+      // Tab and status in ONE reset + fetch: two fetches race, and the early one can land the
+      // conversation alone in the list and scroll to the wrong place (review 2026-10-31).
+      emitter.emit('clearSearchInput');
+      activeAssigneeTab.value = assigneeTab;
+      // The status dropdown reads the store; the agent's saved preference is left untouched.
       store.dispatch('setChatStatusFilter', status);
       onBasicFilterChange(status, 'status');
     },

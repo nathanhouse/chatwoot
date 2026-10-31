@@ -30,9 +30,10 @@ export const findListPlacement = ({
 };
 
 /**
- * When a conversation is opened by URL (search result, notification, link), move the list to the
- * tab and status it belongs to and scroll its card into view. It acts once per opened conversation,
- * so a filter the agent changes by hand afterwards is never switched back.
+ * Whenever the route's conversation changes (list click, search, notification, link, page load),
+ * move the list to the tab and status that conversation belongs to and scroll its card into view.
+ * It moves the list at most once per conversation, so a filter the agent changes by hand
+ * afterwards is not switched back.
  */
 export function useLocateOpenConversation({
   routeConversationId,
@@ -43,8 +44,7 @@ export function useLocateOpenConversation({
   activeStatus,
   currentUserId,
   availableTabs,
-  switchTab,
-  switchStatus,
+  moveList,
   scrollToIndex,
 }) {
   const pendingId = ref(null);
@@ -63,6 +63,8 @@ export function useLocateOpenConversation({
     [pendingId, () => selectedChat.value?.id, () => conversationList.value],
     async () => {
       const id = pendingId.value;
+      // Wait until the store has re-selected the conversation: a status switch empties the store
+      // and clears the selection until the refetch lands.
       if (!id || isScopedView.value || selectedChat.value?.id !== id) return;
 
       const index = conversationList.value.findIndex(c => c.id === id);
@@ -73,7 +75,8 @@ export function useLocateOpenConversation({
         return;
       }
 
-      // One switch per opened conversation; if it is still not listed after that, leave the list alone.
+      // Move at most once per conversation. If a later update still doesn't include it (e.g. it is
+      // past the loaded page), stop.
       const placement = hasSwitched
         ? null
         : findListPlacement({
@@ -88,12 +91,7 @@ export function useLocateOpenConversation({
         return;
       }
       hasSwitched = true;
-      if (placement.assigneeTab !== activeTab.value) {
-        switchTab(placement.assigneeTab);
-      }
-      if (placement.status !== activeStatus.value) {
-        switchStatus(placement.status);
-      }
+      moveList(placement);
     },
     { immediate: true }
   );

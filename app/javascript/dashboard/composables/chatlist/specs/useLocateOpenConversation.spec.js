@@ -76,10 +76,9 @@ describe('useLocateOpenConversation', () => {
     const conversationList = ref(list);
     const activeTab = ref('unassigned');
     const activeStatus = ref('open');
-    const switchTab = vi.fn(tab => {
-      activeTab.value = tab;
-    });
-    const switchStatus = vi.fn(status => {
+    // One call per move, so ChatList can fetch once when both the tab and the status change.
+    const moveList = vi.fn(({ assigneeTab, status }) => {
+      activeTab.value = assigneeTab;
       activeStatus.value = status;
     });
     const scrollToIndex = vi.fn();
@@ -93,8 +92,7 @@ describe('useLocateOpenConversation', () => {
       activeStatus,
       currentUserId: computed(() => ME),
       availableTabs: computed(() => ALL_TABS),
-      switchTab,
-      switchStatus,
+      moveList,
       scrollToIndex,
     });
 
@@ -110,8 +108,7 @@ describe('useLocateOpenConversation', () => {
       selectedChat,
       conversationList,
       activeStatus,
-      switchTab,
-      switchStatus,
+      moveList,
       scrollToIndex,
     };
   };
@@ -121,8 +118,10 @@ describe('useLocateOpenConversation', () => {
     const t = setup({ list: [other] });
 
     await t.open();
-    expect(t.switchTab).toHaveBeenCalledWith('me');
-    expect(t.switchStatus).not.toHaveBeenCalled();
+    expect(t.moveList).toHaveBeenCalledWith({
+      assigneeTab: 'me',
+      status: 'open',
+    });
 
     t.conversationList.value = [other, mine];
     await nextTick();
@@ -134,8 +133,7 @@ describe('useLocateOpenConversation', () => {
     const t = setup({ list: [mine] });
 
     await t.open();
-    expect(t.switchTab).not.toHaveBeenCalled();
-    expect(t.switchStatus).not.toHaveBeenCalled();
+    expect(t.moveList).not.toHaveBeenCalled();
     expect(t.scrollToIndex).toHaveBeenCalledWith(0);
   });
 
@@ -143,8 +141,7 @@ describe('useLocateOpenConversation', () => {
     const t = setup({ scoped: true });
 
     await t.open();
-    expect(t.switchTab).not.toHaveBeenCalled();
-    expect(t.switchStatus).not.toHaveBeenCalled();
+    expect(t.moveList).not.toHaveBeenCalled();
     expect(t.scrollToIndex).not.toHaveBeenCalled();
   });
 
@@ -153,7 +150,10 @@ describe('useLocateOpenConversation', () => {
     const t = setup({ list: [], selected: resolved });
 
     await t.open();
-    expect(t.switchStatus).toHaveBeenCalledWith('resolved');
+    expect(t.moveList).toHaveBeenCalledWith({
+      assigneeTab: 'me',
+      status: 'resolved',
+    });
     t.conversationList.value = [resolved];
     await nextTick();
     await nextTick();
@@ -167,7 +167,7 @@ describe('useLocateOpenConversation', () => {
     t.selectedChat.value = resolved;
     await nextTick();
     await nextTick();
-    expect(t.switchStatus).toHaveBeenCalledTimes(1);
+    expect(t.moveList).toHaveBeenCalledTimes(1);
   });
 
   it('switches once and gives up if the conversation still is not listed', async () => {
@@ -179,7 +179,7 @@ describe('useLocateOpenConversation', () => {
     t.selectedChat.value = { ...mine };
     await nextTick();
     await nextTick();
-    expect(t.switchTab).toHaveBeenCalledTimes(1);
+    expect(t.moveList).toHaveBeenCalledTimes(1);
     expect(t.scrollToIndex).not.toHaveBeenCalled();
   });
 });
