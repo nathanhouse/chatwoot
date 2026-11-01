@@ -833,12 +833,9 @@ onMounted(() => {
     currentUserId: computed(() => currentUser.value?.id),
     availableTabs: computed(() => assigneeTabItems.value.map(item => item.key)),
     moveList: ({ assigneeTab, status }) => {
-      if (status === activeStatus.value) {
-        updateAssigneeTab(assigneeTab);
-        return;
-      }
-      // Tab and status in ONE reset + fetch: two fetches race, and the early one can land the
-      // conversation alone in the list and scroll to the wrong place (review 2026-10-31).
+      // Always ONE reset + fetch, even when only the tab changes. Emptying the store clears the
+      // selection, so the composable waits for the fetched page instead of scrolling to the lone
+      // conversation the store already holds (reviews 2026-10-31 and 2026-11-01).
       emitter.emit('clearSearchInput');
       activeAssigneeTab.value = assigneeTab;
       // The status dropdown reads the store; the agent's saved preference is left untouched.
