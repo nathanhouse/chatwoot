@@ -105,13 +105,15 @@ watch(
     hovered.value = false;
   }
 );
+// StationX: the open ticket (isActiveChat) is blue with a left bar instead of upstream's faint grey, so it
+// stands out in the list (Alan 2026-11-04). Change is only in the 'active' class below.
 </script>
 
 <template>
   <div
     class="relative flex items-start flex-grow-0 flex-shrink-0 w-auto max-w-full py-0 cursor-pointer conversation border-b border-n-slate-3 hover:border-n-surface-1 hover:bg-n-alpha-1 dark:hover:bg-n-alpha-3 group hover:z-[1] before:content-[none] before:absolute before:-top-px before:inset-x-0 before:h-px before:bg-n-surface-1 before:pointer-events-none hover:before:content-['']"
     :class="{
-      'active animate-card-select bg-n-background !border-n-surface-1':
+      'active animate-card-select !bg-n-blue-4 shadow-[inset_0.1875rem_0_0_0_theme(colors.n.brand)] !border-n-surface-1':
         isActiveChat,
       'selected bg-n-slate-2 !border-n-surface-1': selected,
       'px-0': compact,
