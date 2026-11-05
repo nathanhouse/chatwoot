@@ -386,3 +386,27 @@ vulnerabilities:
       - "pkg:npm/dompurify@3.4.13"
     expired_at: 2027-01-31
     statement: upstream v4.18.0 baseline (HIGH; pnpm-lock.yaml)
+  # Rails advisories published 2026-11-04, fixed only in Rails 8.0.5.2 / 8.1.4.1; no Rails 7.2 release.
+  # Upstream deferred them 2026-11-05 (cbf38a6eb4). Nathan's decision 2026-11-05 (rails-nov4): baseline until 31 Dec.
+  # Reasons checked on the live server 2026-11-05: variant_processor :vips, no ffmpeg/ffprobe, no app ImageMagick calls.
+  # Remove when we take upstream's Rails 8 upgrade.
+  - id: GHSA-f3w6-w445-fwh9
+    purls:
+      - "pkg:gem/activestorage@7.2.3.1"
+    expired_at: 2026-12-31
+    statement: CRITICAL; needs the ImageMagick analyzer, which only runs with variant_processor :mini_magick (ours is :vips)
+  - id: GHSA-v924-7rp8-4mxh
+    purls:
+      - "pkg:gem/activestorage@7.2.3.1"
+    expired_at: 2026-12-31
+    statement: HIGH; needs ffmpeg/ffprobe (not installed) or ImageMagick processing (not used); previewers are disabled
+  - id: GHSA-wm3x-v3qw-4jh3
+    purls:
+      - "pkg:gem/actionpack@7.2.3.1"
+    expired_at: 2026-12-31
+    statement: HIGH; the 3 each_key calls in app/ are on plain hashes, not Parameters, so nothing reaches mass assignment
+  - id: GHSA-8474-xrp6-wh69
+    purls:
+      - "pkg:gem/activesupport@7.2.3.1"
+    expired_at: 2026-12-31
+    statement: HIGH; DoS via Action Cable channel names, still reachable (upstream says so); accepted until Rails 8
